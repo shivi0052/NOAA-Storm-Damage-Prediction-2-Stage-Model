@@ -1,6 +1,6 @@
 #  NOAA Storm Damage Prediction
 
-### ISOM 631 – Predictive Analytics and Machine Learning | Suffolk University MSBA | Spring 2026
+### ISOM 631 : Predictive Analytics and Machine Learning | Suffolk University MSBA | Spring 2026
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Best_Model-FF6600?logo=xgboost)](https://xgboost.readthedocs.io)
@@ -17,7 +17,7 @@ This project builds a **two-stage machine learning pipeline** to predict propert
 **Stage 1 (Classification):** XGBoost · **Accuracy = 92.2%** · **AUC = 0.9705**
 **Stage 2 (Regression):** XGBoost · **R² = 0.653** · **RMSE = 1.2194** (log-damage scale)
 
-The analysis covers 283,155 storm events with recorded damage outcomes (out of 409,280 raw records), spanning 2013–2020 across all 50 U.S. states, and was built for a simulated regional insurance company use case.
+The analysis covers 283,155 storm events with recorded damage outcomes (out of 409,280 raw records), spanning 2013-2020 across all 50 U.S. states, and was built for a simulated regional insurance company use case.
 
 ---
 
@@ -25,7 +25,7 @@ The analysis covers 283,155 storm events with recorded damage outcomes (out of 4
 
 1. **Predict** whether an individual storm event will cause property damage, using only information available the moment NOAA logs the event.
 2. **Estimate** the dollar amount of damage for storms predicted to be damaging.
-3. **Solve** the zero-inflation problem inherent to catastrophe data — 73.7% of storm events cause zero damage, which breaks standard single-stage regression.
+3. **Solve** the zero-inflation problem inherent to catastrophe data : 73.7% of storm events cause zero damage, which breaks standard single-stage regression.
 4. **Translate** model findings into deployment-ready recommendations for an insurer's claims, risk, and finance teams.
 
 ---
@@ -81,7 +81,7 @@ NOAA-Storm-Damage-Prediction/
 └── .gitignore
 ```
 
-> The notebook also generates **three interactive Folium maps** (national damage heatmap, top-500 catastrophic events, and a New England/Boston regional view). These render live inside the notebook but are interactive HTML, not static images, so they aren't duplicated in `visualizations/` — open the notebook to explore them.
+> The notebook also generates **three interactive Folium maps** (national damage heatmap, top-500 catastrophic events, and a New England/Boston regional view). These render live inside the notebook but are interactive HTML, not static images, so they aren't duplicated in `visualizations/` : open the notebook to explore them.
 
 ---
 
