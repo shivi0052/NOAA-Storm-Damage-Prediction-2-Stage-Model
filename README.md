@@ -28,6 +28,11 @@ The analysis covers 283,155 storm events with recorded damage outcomes (out of 4
 3. **Solve** the zero-inflation problem inherent to catastrophe data : 73.7% of storm events cause zero damage, which breaks standard single-stage regression.
 4. **Translate** model findings into deployment-ready recommendations for an insurer's claims, risk, and finance teams.
 
+## Project Website
+
+A single-file interactive website summarizing the full project is available at:
+> **https://shivi0052.github.io/NOAA-Storm-Damage-Prediction-2-Stage-Model/**
+
 ---
 
 ## Why Two Stages?
