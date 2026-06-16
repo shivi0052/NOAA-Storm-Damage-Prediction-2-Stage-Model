@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOAA Storm Damage Prediction | Two Stage ML Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAF7;
+    --bg-alt:#F3F1EA;
+    --card:#FFFFFF;
+    --ink:#1F2A2E;
+    --ink-soft:#4C5A5E;
+    --ink-mute:#7C8A8E;
+    --line:#DEDACC;
+    --navy:#1E3A52;
+    --navy-soft:#2C5170;
+    --teal:#2F7A6E;
+    --teal-soft:#3F9486;
+    --amber:#B5712B;
+    --amber-bg:#F4E6D2;
+    --green-good:#3C7A4F;
+    --shadow:0 1px 2px rgba(31,42,46,0.04), 0 8px 24px rgba(31,42,46,0.05);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Libre Franklin',sans-serif;
+    line-height:1.65;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:var(--teal-soft);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(251,250,247,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Source Serif 4',serif;font-weight:700;font-size:1.08rem;color:var(--ink);}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);}
+  .navlinks{display:flex;gap:30px;font-size:0.88rem;color:var(--ink-soft);}
+  .navlinks a{color:var(--ink-soft);font-weight:500;}
+  .navlinks a:hover{color:var(--ink);text-decoration:none;}
+  .nav-cta{
+    background:var(--navy);color:#fff;padding:9px 18px;border-radius:4px;
+    font-weight:600;font-size:0.85rem;
+  }
+  .nav-cta:hover{background:var(--navy-soft);text-decoration:none;}
+
+  .hero{
+    position:relative;
+    padding:170px 0 100px;
+    overflow:hidden;
+    border-bottom:1px solid var(--line);
+    background:var(--bg-alt);
+  }
+  .hero-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:60px;align-items:center;position:relative;z-index:2;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:0.74rem;letter-spacing:0.06em;
+    color:var(--amber);text-transform:uppercase;
+    border:1px solid var(--amber);background:var(--amber-bg);
+    padding:6px 12px;border-radius:20px;
+    margin-bottom:26px;
+  }
+  .eyebrow .pulse{width:6px;height:6px;border-radius:50%;background:var(--amber);}
+  h1.headline{font-size:3.3rem;line-height:1.12;font-weight:600;margin-bottom:22px;}
+  h1.headline .accent{color:var(--teal);font-style:italic;}
+  .sub{font-size:1.08rem;color:var(--ink-soft);max-width:520px;margin-bottom:36px;}
+  .sub b{color:var(--ink);font-weight:600;}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--navy);color:#fff;padding:13px 24px;border-radius:5px;
+    font-weight:600;font-size:0.92rem;display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-primary:hover{background:var(--navy-soft);text-decoration:none;}
+  .btn-secondary{
+    border:1px solid var(--ink-mute);color:var(--ink);padding:13px 24px;border-radius:5px;
+    font-weight:600;font-size:0.92rem;background:var(--card);
+  }
+  .btn-secondary:hover{border-color:var(--teal);text-decoration:none;}
+
+  .radar-wrap{position:relative;display:flex;align-items:center;justify-content:center;height:380px;}
+  .radar{position:relative;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle, rgba(47,122,110,0.06) 0%, rgba(251,250,247,0) 70%);
+  }
+  .ring{position:absolute;border:1px solid rgba(47,122,110,0.28);border-radius:50%;}
+  .ring1{width:100%;height:100%;top:0;left:0;}
+  .ring2{width:70%;height:70%;top:15%;left:15%;}
+  .ring3{width:40%;height:40%;top:30%;left:30%;}
+  .ring4{width:12%;height:12%;top:44%;left:44%;background:var(--teal);opacity:0.6;}
+  .sweep{
+    position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(181,113,43,0.35) 0deg, rgba(181,113,43,0) 50deg);
+    animation:spin 5s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .blip{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--amber);}
+  .b1{top:22%;left:62%;animation:blink 3s infinite;}
+  .b2{top:58%;left:30%;animation:blink 3s infinite 1s;}
+  .b3{top:68%;left:68%;animation:blink 3s infinite 2s;}
+  @keyframes blink{0%,100%{opacity:0.25;}50%{opacity:1;}}
+  .radar-label{
+    position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+    font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--ink-mute);
+    letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;
+  }
+
+  .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:64px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative;z-index:2;}
+  .stat{background:var(--card);padding:22px 20px;}
+  .stat .num{font-family:'Source Serif 4',serif;font-size:1.9rem;font-weight:600;color:var(--navy);}
+  .stat .num.amber{color:var(--amber);}
+  .stat .label{font-size:0.78rem;color:var(--ink-mute);margin-top:4px;}
+
+  section{padding:90px 0;}
+  .section-head{margin-bottom:48px;max-width:680px;}
+  .kicker{
+    font-family:'IBM Plex Mono',monospace;font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--teal);margin-bottom:12px;display:block;
+  }
+  h2.title{font-size:2rem;margin-bottom:14px;font-weight:600;}
+  .section-head p{color:var(--ink-soft);font-size:1rem;}
+
+  .problem{background:var(--bg-alt);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .problem-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:56px;align-items:center;}
+  .zero-bar{display:flex;height:46px;border-radius:6px;overflow:hidden;margin-bottom:14px;border:1px solid var(--line);}
+  .zero-bar .seg-zero{background:#C7C2B0;width:73.7%;display:flex;align-items:center;padding-left:14px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:#3A362A;font-weight:500;}
+  .zero-bar .seg-damage{background:var(--amber);width:26.3%;display:flex;align-items:center;justify-content:flex-end;padding-right:14px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:#fff;font-weight:600;}
+  .zero-legend{display:flex;gap:24px;font-size:0.85rem;color:var(--ink-soft);margin-bottom:36px;}
+  .zero-legend span{display:flex;align-items:center;gap:8px;}
+  .swatch{width:10px;height:10px;border-radius:2px;}
+  .problem-quote{
+    border-left:3px solid var(--amber);padding-left:20px;color:var(--ink);font-size:1.02rem;
+  }
+  .stage-cards{display:flex;flex-direction:column;gap:18px;}
+  .stage-card{
+    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:24px 26px;
+    box-shadow:var(--shadow);
+  }
+  .stage-card .stage-tag{
+    font-family:'IBM Plex Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;
+    color:#fff;background:var(--teal);display:inline-block;padding:4px 10px;border-radius:3px;margin-bottom:12px;font-weight:600;
+  }
+  .stage-card.s2 .stage-tag{background:var(--amber);}
+  .stage-card h4{font-size:1.2rem;margin-bottom:8px;}
+  .stage-card p{color:var(--ink-soft);font-size:0.92rem;}
+
+  .results-tabs{display:flex;gap:10px;margin-bottom:28px;}
+  .tab-btn{
+    background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
+    padding:10px 20px;border-radius:5px;font-family:'Libre Franklin',sans-serif;font-weight:600;font-size:0.88rem;cursor:pointer;
+    transition:all 0.15s;
+  }
+  .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .results-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:8px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);}
+  .results-table th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--ink-mute);padding:16px 20px;border-bottom:1px solid var(--line);font-weight:500;background:var(--bg-alt);
+  }
+  .results-table td{padding:18px 20px;border-bottom:1px solid var(--line);font-size:0.94rem;color:var(--ink);}
+  .results-table tr:last-child td{border-bottom:none;}
+  .results-table tr.winner{background:#EEF5F2;}
+  .results-table tr.winner td:first-child{color:var(--teal);font-weight:700;}
+  .badge-best{
+    background:var(--green-good);color:#fff;font-size:0.68rem;font-weight:700;
+    padding:2px 8px;border-radius:10px;margin-left:8px;text-transform:uppercase;letter-spacing:0.03em;
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .viz-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;}
+  .viz-card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    transition:transform 0.2s, border-color 0.2s;box-shadow:var(--shadow);
+  }
+  .viz-card:hover{transform:translateY(-3px);border-color:var(--teal);}
+  .viz-card img{width:100%;display:block;background:#fff;border-bottom:1px solid var(--line);}
+  .viz-card .cap{padding:16px 18px;}
+  .viz-card .cap h4{font-size:0.98rem;margin-bottom:4px;}
+  .viz-card .cap p{font-size:0.82rem;color:var(--ink-soft);}
+
+  .feat-section{background:var(--bg-alt);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .feat-cols{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+  .feat-col h4{font-size:1.05rem;color:var(--navy);margin-bottom:18px;font-family:'Libre Franklin',sans-serif;font-weight:700;}
+  .feat-row{margin-bottom:14px;}
+  .feat-row .flabel{display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:var(--ink);}
+  .feat-row .fval{color:var(--ink-mute);font-family:'IBM Plex Mono',monospace;font-size:0.8rem;}
+  .fbar-track{height:7px;background:var(--line);border-radius:4px;overflow:hidden;}
+  .fbar-fill{height:100%;border-radius:4px;background:var(--teal);}
+  .feat-col.s2 .fbar-fill{background:var(--amber);}
+
+  .rec-list{display:flex;flex-direction:column;gap:0;}
+  .rec-item{
+    display:grid;grid-template-columns:60px 1fr;gap:24px;padding:30px 0;border-bottom:1px solid var(--line);
+  }
+  .rec-item:last-child{border-bottom:none;}
+  .rec-num{font-family:'Source Serif 4',serif;font-size:2.1rem;font-weight:600;color:var(--ink-mute);}
+  .rec-item h4{font-size:1.18rem;margin-bottom:8px;color:var(--ink);}
+  .rec-item p{color:var(--ink-soft);font-size:0.94rem;margin-bottom:10px;}
+  .rec-evidence{
+    font-size:0.84rem;color:var(--teal);background:#EEF5F2;
+    border:1px solid #CDE3DC;border-radius:5px;padding:9px 14px;display:inline-block;
+  }
+
+  .ethics-box{
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amber);
+    border-radius:6px;padding:28px 30px;box-shadow:var(--shadow);
+  }
+  .ethics-box p{color:var(--ink-soft);font-size:0.95rem;}
+  .ethics-box p+p{margin-top:14px;}
+
+  footer{padding:50px 0 40px;border-top:1px solid var(--line);background:var(--bg-alt);}
+  .footer-grid{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;}
+  footer .team{color:var(--ink-soft);font-size:0.86rem;}
+  footer .team b{color:var(--ink);}
+  .footer-links{display:flex;gap:18px;}
+  .footer-links a{color:var(--ink-soft);font-size:0.88rem;}
+
+  @media(max-width:880px){
+    .hero-grid{grid-template-columns:1fr;}
+    .radar-wrap{height:260px;margin-top:20px;}
+    .radar{width:240px;height:240px;}
+    h1.headline{font-size:2.3rem;}
+    .stat-strip{grid-template-columns:repeat(2,1fr);}
+    .problem-grid{grid-template-columns:1fr;}
+    .feat-cols{grid-template-columns:1fr;gap:30px;}
+    .viz-grid{grid-template-columns:1fr;}
+    .navlinks{display:none;}
+    section{padding:60px 0;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> NOAA Storm Damage</div>
+    <div class="navlinks">
+      <a href="#problem">The Problem</a>
+      <a href="#model">The Model</a>
+      <a href="#visuals">Visuals</a>
+      <a href="#recommendations">Recommendations</a>
+    </div>
+    <a class="nav-cta" href="https://github.com/shivi0052/NOAA-Storm-Damage-Prediction-2-Stage-Model" target="_blank">View Repo</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> ISOM 631, Suffolk University MSBA</div>
+        <h1 class="headline">Predicting storm damage <span class="accent">before the adjuster arrives.</span></h1>
+        <p class="sub">A two stage machine learning pipeline that flags <b>which</b> NOAA recorded storms will cause property damage, then estimates <b>how much</b>, the same day the event is logged instead of weeks later.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#model">See the model results</a>
+          <a class="btn-secondary" href="https://github.com/shivi0052/NOAA-Storm-Damage-Prediction-2-Stage-Model/blob/main/NOAA_Storm_Damage_Analysis.ipynb" target="_blank">Open the notebook</a>
+        </div>
+      </div>
+      <div class="radar-wrap">
+        <div class="radar">
+          <div class="ring ring1"></div>
+          <div class="ring ring2"></div>
+          <div class="ring ring3"></div>
+          <div class="ring ring4"></div>
+          <div class="sweep"></div>
+          <div class="blip b1"></div>
+          <div class="blip b2"></div>
+          <div class="blip b3"></div>
+          <div class="radar-label">live event detection, illustrative</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat"><div class="num">283,155</div><div class="label">Storm events analyzed</div></div>
+      <div class="stat"><div class="num amber">92.2%</div><div class="label">Stage 1 accuracy</div></div>
+      <div class="stat"><div class="num">0.9705</div><div class="label">Stage 1 AUC</div></div>
+      <div class="stat"><div class="num amber">0.653</div><div class="label">Stage 2 R squared</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="problem">
+  <div class="wrap">
+    <div class="problem-grid">
+      <div>
+        <span class="kicker">The Core Challenge</span>
+        <h2 class="title">73.7% of storms cause zero damage.</h2>
+        <div class="zero-bar">
+          <div class="seg-zero">73.7%</div>
+          <div class="seg-damage">26.3%</div>
+        </div>
+        <div class="zero-legend">
+          <span><span class="swatch" style="background:#C7C2B0"></span>No damage recorded</span>
+          <span><span class="swatch" style="background:var(--amber)"></span>Damage recorded</span>
+        </div>
+        <p class="problem-quote">A single regression model trained on this data learns to predict numbers close to zero for everything. The fix is to split the question in two, the same way professional catastrophe models work.</p>
+      </div>
+      <div class="stage-cards">
+        <div class="stage-card">
+          <span class="stage-tag">Stage 1, Classification</span>
+          <h4>Will this storm cause any damage?</h4>
+          <p>Trained on all 283,155 events using Logistic Regression, then Random Forest, then XGBoost. Output: a damage or no damage flag, the moment NOAA logs the event.</p>
+        </div>
+        <div class="stage-card s2">
+          <span class="stage-tag">Stage 2, Regression</span>
+          <h4>If damage occurs, how much?</h4>
+          <p>Trained only on the 74,514 damage positive events using Linear Regression, then Random Forest, then XGBoost. Output: an estimated dollar figure for reserving.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="model">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Model Results</span>
+      <h2 class="title">Two stages, two leaderboards.</h2>
+      <p>Each stage was tested against progressively stronger baselines. XGBoost won both, for different reasons in each stage.</p>
+    </div>
+
+    <div class="results-tabs">
+      <button class="tab-btn active" onclick="showTab('s1')">Stage 1: Classification</button>
+      <button class="tab-btn" onclick="showTab('s2')">Stage 2: Regression</button>
+    </div>
+
+    <div class="tab-panel active" id="panel-s1">
+      <table class="results-table">
+        <tr><th>Model</th><th>Accuracy</th><th>AUC</th><th>Notes</th></tr>
+        <tr><td>Logistic Regression</td><td>82.0%</td><td>0.8482</td><td>Baseline</td></tr>
+        <tr><td>Random Forest</td><td>89.1%</td><td>0.9503</td><td>Strong improvement</td></tr>
+        <tr class="winner"><td>XGBoost<span class="badge-best">Best</span></td><td>92.2%</td><td>0.9705</td><td>Final model</td></tr>
+      </table>
+    </div>
+    <div class="tab-panel" id="panel-s2">
+      <table class="results-table">
+        <tr><th>Model</th><th>R squared</th><th>RMSE (log scale)</th><th>Notes</th></tr>
+        <tr><td>Linear Regression</td><td>0.341</td><td>1.6806</td><td>Baseline</td></tr>
+        <tr><td>Random Forest</td><td>0.612</td><td>1.2902</td><td>80% R squared improvement over baseline</td></tr>
+        <tr class="winner"><td>XGBoost<span class="badge-best">Best</span></td><td>0.653</td><td>1.2194</td><td>24 engineered features</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="feat-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">What Drives The Prediction</span>
+      <h2 class="title">Top feature importances, by stage.</h2>
+      <p>Raw physical intensity tells the model whether damage happens. Storm type severity and location tell it how much.</p>
+    </div>
+    <div class="feat-cols">
+      <div class="feat-col">
+        <h4>Stage 1: Occurrence</h4>
+        <div class="feat-row">
+          <div class="flabel"><span>Magnitude Type</span><span class="fval">0.42</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Severity Score</span><span class="fval">0.14</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:33%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Weather Forecast Office (target encoded)</span><span class="fval">0.06</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:14%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Zone Type</span><span class="fval">0.05</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:12%"></div></div>
+        </div>
+      </div>
+      <div class="feat-col s2">
+        <h4>Stage 2: Severity</h4>
+        <div class="feat-row">
+          <div class="flabel"><span>WFO Target Encoding</span><span class="fval">0.16</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Magnitude times Severity</span><span class="fval">0.14</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:87%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Magnitude Type</span><span class="fval">0.09</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:56%"></div></div>
+        </div>
+        <div class="feat-row">
+          <div class="flabel"><span>Severity Score</span><span class="fval">0.08</span></div>
+          <div class="fbar-track"><div class="fbar-fill" style="width:50%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="visuals">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Exploratory Analysis and Diagnostics</span>
+      <h2 class="title">The charts behind the numbers.</h2>
+      <p>Pulled directly from the analysis notebook, covering distribution shape, seasonality, correlation structure, and model diagnostics.</p>
+    </div>
+    <div class="viz-grid">
+      <div class="viz-card">
+        <img src="visualizations/Target%20Variable%20Distribution.png" alt="Target variable distribution">
+        <div class="cap"><h4>Target Variable Distribution</h4><p>Log transform reduces skewness from 124 to 0.95, the most important methodological choice in the project.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Storm%20Type%20Frequency%20vs%20Severity.png" alt="Storm type frequency vs severity">
+        <div class="cap"><h4>Frequency vs Severity</h4><p>Thunderstorm wind is most frequent, while hurricanes average $151M per event despite being rare.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Seasonality%20and%20Coastal%20Impact.png" alt="Seasonality and coastal impact">
+        <div class="cap"><h4>Seasonality and Coastal Premium</h4><p>Damage peaks in August and September. Coastal states see 2.7 times higher average damage than inland.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Correlation%20Heatmap%20-%20Damage%20Amount.png" alt="Correlation heatmap damage amount">
+        <div class="cap"><h4>Correlation: Damage Amount</h4><p>Event severity score at plus 0.34 is the strongest linear correlate of how much damage occurs.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Stage%201%20ROC%20Curve%20and%20Confusion%20Matrix.png" alt="Stage 1 ROC curve and confusion matrix">
+        <div class="cap"><h4>Stage 1 Diagnostics</h4><p>XGBoost's ROC curve sits closest to the top left corner, with an AUC of 0.9705 and accuracy of 92.2%.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Stage%202%20Predicted%20vs%20Actual.png" alt="Stage 2 predicted vs actual">
+        <div class="cap"><h4>Stage 2 Diagnostics</h4><p>XGBoost shows the tightest cluster around the perfect prediction line across all three models.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/XGBoost%20Feature%20Importance.png" alt="XGBoost feature importance">
+        <div class="cap"><h4>Feature Importance, Both Stages</h4><p>Side by side comparison of what each XGBoost model leans on most.</p></div>
+      </div>
+      <div class="viz-card">
+        <img src="visualizations/Final%20Results%20Dashboard.png" alt="Final results dashboard">
+        <div class="cap"><h4>Final Results Dashboard</h4><p>All key metrics, confusion matrix, and feature importances in one summary view.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feat-section" id="recommendations">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">From Model To Business Action</span>
+      <h2 class="title">What an insurer should actually do with this.</h2>
+      <p>Built for a simulated regional insurance company. Every recommendation states its evidence and its honest limit.</p>
+    </div>
+    <div class="rec-list">
+      <div class="rec-item">
+        <div class="rec-num">01</div>
+        <div>
+          <h4>Flag damaged locations the same day, not days later</h4>
+          <p>The moment NOAA logs a storm's type, magnitude, and location, the model flags which locations likely suffered damage. This replaces a manual field adjuster process that takes days.</p>
+          <span class="rec-evidence">80.2% damage event recall, 96.5% of no damage events correctly cleared</span>
+        </div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-num">02</div>
+        <div>
+          <h4>See losses clustering before the claims flood in</h4>
+          <p>Mapping flagged damage by location surfaces regional accumulation early, for example multiple counties hit by the same hurricane, giving finance and reinsurance teams advance warning.</p>
+          <span class="rec-evidence">Coastal states average 2.7 times higher damage than inland</span>
+        </div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-num">03</div>
+        <div>
+          <h4>Set financial reserves the same day</h4>
+          <p>For every flagged event, the model also produces a dollar estimate, giving finance a working number immediately instead of waiting weeks for field reports.</p>
+          <span class="rec-evidence">R squared of 0.653, estimates typically within about 3.4 times the actual dollar figure</span>
+        </div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-num">04</div>
+        <div>
+          <h4>Add exposure data for full catastrophe model capability</h4>
+          <p>The current model is hazard only. Joining it with property exposure data such as building value, age, and construction type is the clear next phase.</p>
+          <span class="rec-evidence">Hazard only R squared of 0.65 is consistent with literature. Exposure data can push this toward 0.80 to 0.90</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Ethical Considerations</span>
+      <h2 class="title">Geography is a hazard signal, not a proxy.</h2>
+    </div>
+    <div class="ethics-box">
+      <p>This model uses geographic features such as state, coastal indicator, and latitude and longitude as predictors. Storm risk genuinely varies by geography. Coastal exposure and hurricane paths are physical phenomena, not stand ins for protected demographic characteristics.</p>
+      <p>That said, any operational deployment should ensure damage estimates and reserve recommendations do not inadvertently slow claims response in lower income or historically underserved regions, since disaster recovery speed already correlates with such factors independent of this model.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div class="team">ISOM 631, Predictive Analytics and Machine Learning, Suffolk University MSBA<br>By <b>Shivani</b></div>
+    <div class="footer-links">
+      <a href="https://github.com/shivi0052/NOAA-Storm-Damage-Prediction-2-Stage-Model" target="_blank">GitHub Repo</a>
+      <a href="https://github.com/shivi0052/NOAA-Storm-Damage-Prediction-2-Stage-Model/blob/main/NOAA_Storm_Damage_Analysis.ipynb" target="_blank">Notebook</a>
+      <a href="https://github.com/shivi0052/NOAA-Storm-Damage-Prediction-2-Stage-Model/blob/main/NOAA_Damage%20Prediction%20Overview.pptx" target="_blank">Presentation</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function showTab(id){
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('panel-'+id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
