@@ -12,7 +12,7 @@
 
 ## Project Summary
 
-This project builds a **two-stage machine learning pipeline** to predict property damage from severe weather events recorded in the NOAA Storm Events Database. Given a storm's characteristics : type, magnitude, duration, location, and timing — the model first predicts **whether** the storm will cause any property damage, then, for the storms that do, predicts **how much**.
+This project builds a **two-stage machine learning pipeline** to predict property damage from severe weather events recorded in the NOAA Storm Events Database. Given a storm's characteristics : type, magnitude, duration, location, and timing - the model first predicts **whether** the storm will cause any property damage, then, for the storms that do, predicts **how much**.
 
 **Stage 1 (Classification):** XGBoost · **Accuracy = 92.2%** · **AUC = 0.9705**
 **Stage 2 (Regression):** XGBoost · **R² = 0.653** · **RMSE = 1.2194** (log-damage scale)
@@ -32,9 +32,9 @@ The analysis covers 283,155 storm events with recorded damage outcomes (out of 4
 
 ## Why Two Stages?
 
-A single regression model trained on all 283,155 events would fail, because nearly three-quarters of storms cause no damage at all. A model trained on mostly zeros learns to predict numbers close to zero for everything, which is useless for the events that matter.
+A single regression model trained on all 283,155 events would fail, because nearly three quarters of storms cause no damage at all. A model trained on mostly zeros learns to predict numbers close to zero for everything, which is useless for the events that matter.
 
-This project solves it the way real catastrophe (CAT) models do — split the problem in two:
+This project solves it the way real catastrophe (CAT) models do - split the problem in two:
 
 | Stage | Question | Data Used | Model |
 |---|---|---|---|
@@ -63,13 +63,13 @@ This project solves it the way real catastrophe (CAT) models do — split the pr
 
 ```
 NOAA-Storm-Damage-Prediction-2-Stage-Model
-│
 ├── visualizations
-├── NOAA_Storm_Damage_Analysis.ipynb   ← Main analysis notebook
-├── NOAA_Presentation_Group_6.pptx     ← Final presentation deck
-└── Final Dashboard
-├── README.md                          ← You are here
 └── .gitignore
+└── Final Dashboard
+├── NOAA_DamagePredictionOverview.pptx     ← Final presentation deck
+├── NOAA_Storm_Damage_Analysis.ipynb   ← Main analysis notebook
+├── README.md                          ← You are here
+
 ```
 
 ---
@@ -79,7 +79,7 @@ NOAA-Storm-Damage-Prediction-2-Stage-Model
 | Part | Content | Key Output |
 |---|---|---|
 | 🔵 **Part 1 – The Situation** | Data loading, quality audit, leakage removal, target analysis | 283,155 valid records, zero-inflation identified (73.7%) |
-| 🟡 **Part 2 – The Discovery** | Feature engineering, log-transform, 8 EDA questions, 3 Folium maps | Frequency-vs-severity gap, seasonality, coastal premium, correlation structure |
+| 🟡 **Part 2 – The Discovery** | Feature engineering, log-transform, 8 EDA questions, 3 Folium maps | Frequency vs severity gap, seasonality, coastal premium, correlation structure |
 | 🟠 **Part 3 – The Model** | Two-stage pipeline: classification → regression, feature importance | Stage 1 AUC = 0.9705 · Stage 2 R² = 0.653 |
 | 🟢 **Part 4 – The Recommendation** | Business interpretation, 4 deployment-ready recommendations | Same-day damage flagging, reserve estimation, exposure roadmap |
 
@@ -110,9 +110,9 @@ The model correctly flags 80.2% of damaging storms while clearing 96.5% of harml
 |---|---|---|---|
 | Linear Regression | 0.341 | 1.6806 | Baseline |
 | Random Forest | 0.612 | 1.2902 | +80% R² vs. baseline |
-| **XGBoost ✅** | **0.653** | **1.2194** | Final model — 24 engineered features |
+| **XGBoost ✅** | **0.653** | **1.2194** | Final model : 24 engineered features |
 
-An R² of 0.65 using *only* hazard data (storm type, magnitude, location, timing — no building or exposure data) is consistent with academic benchmarks for hazard-only catastrophe models. An RMSE of 1.22 on the log scale means predictions typically land within roughly 3.4× of the actual dollar figure , useful for early reserving and triage, not final settlement.
+An R² of 0.65 using *only* hazard data (storm type, magnitude, location, timing - no building or exposure data) is consistent with academic benchmarks for hazard-only catastrophe models. An RMSE of 1.22 on the log scale means predictions typically land within roughly 3.4× of the actual dollar figure , useful for early reserving and triage, not final settlement.
 
 ---
 
@@ -129,7 +129,7 @@ An R² of 0.65 using *only* hazard data (storm type, magnitude, location, timing
 
 ## Key EDA Findings
 
-- **Zero-inflation:** 73.7% of all recorded storms cause $0 in property damage — the core reason a two-stage model is necessary.
+- **Zero-inflation:** 73.7% of all recorded storms cause $0 in property damage : the core reason a two-stage model is necessary.
 - **Frequency ≠ severity:** Thunderstorm wind is the most frequent event type, but hurricanes average **$151M per event** - over 80x more damage per event than wind, despite being rare.
 - **Seasonality:** Damage peaks sharply in August-September (Atlantic hurricane season); coastal states see **2.7× higher average damage** than inland states across all seasons.
 - **Conditional effects:** `is_coastal` and `is_hurricane_season` correlate *negatively* with damage severity but *positively* with damage occurrence - they predict whether damage happens, not how much, once it does.
@@ -139,10 +139,10 @@ An R² of 0.65 using *only* hazard data (storm type, magnitude, location, timing
 
 ## Business Recommendations
 
-1. **Same-day damage triage** — flag likely-damaged locations the moment NOAA logs a storm, instead of waiting days for manual field reports (80.2% damage-event recall).
-2. **Loss accumulation monitoring** - map flagged damage by location in real time to catch regional claim clustering early, ahead of a flood of incoming claims.
-3. **Same-day reserve estimation** - generate a working dollar estimate immediately for finance and reinsurance triggers, instead of waiting weeks for adjuster reports.
-4. **Future enrichment** - the current model is hazard-only; joining it with property exposure data (building value, age, construction type) is expected to raise R² from ~0.65 toward 0.80–0.90 in a future phase.
+1. **Same-day damage triage** : flag likely-damaged locations the moment NOAA logs a storm, instead of waiting days for manual field reports (80.2% damage-event recall).
+2. **Loss accumulation monitoring** : map flagged damage by location in real time to catch regional claim clustering early, ahead of a flood of incoming claims.
+3. **Same-day reserve estimation** : generate a working dollar estimate immediately for finance and reinsurance triggers, instead of waiting weeks for adjuster reports.
+4. **Future enrichment** : the current model is hazard-only; joining it with property exposure data (building value, age, construction type) is expected to raise R² from ~0.65 toward 0.80–0.90 in a future phase.
 
 ---
 
