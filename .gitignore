@@ -1,0 +1,16 @@
+# Data files
+*.csv
+*.parquet
+data/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Environment
+.env
+venv/
